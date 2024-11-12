@@ -1,6 +1,7 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 struct student
 {
     char* Name;
@@ -8,6 +9,82 @@ struct student
     int Id;
     struct student* ptr;
 };
+
+void saveToFile(struct student* head, const char* filename)
+{
+    FILE* file = fopen(filename, "a");
+    if (file == NULL)
+    {
+        perror("Unable to open file for saving");
+        return;
+    }
+
+    struct student* current = head;
+    while (current != NULL) {
+        fprintf(file, "%d %s %s\n", current->Id, current->Name, current->Address);
+        current = current->ptr;
+    }
+    fclose(file);
+    printf("List saved to %s.\n", filename);
+}
+
+void displayFileContent(const char* filename)
+{
+    FILE* file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        perror("Unable to open file for reading");
+        return;
+    }
+
+    int id;
+    char name[50];
+    char address[100];
+    printf("File Content:\nId\tName\t\tAddress\n");
+    while (fscanf(file, "%d %s %s", &id, name, address) == 3)
+    {
+        printf("%d\t%s\t\t%s\n", id, name, address);
+    }
+    fclose(file);
+}
+
+struct student* loadFromFile(const char* filename)
+{
+    FILE* file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        perror("Unable to open file for loading");
+        return NULL;
+    }
+
+    struct student* head = NULL;
+    struct student* temp = NULL;
+
+    while (!feof(file)) {
+        struct student* newnode = (struct student*)malloc(sizeof(struct student));
+        newnode->Name = (char*)malloc(50 * sizeof(char));
+        newnode->Address = (char*)malloc(100 * sizeof(char));
+
+        if (fscanf(file, "%d %s %s", &newnode->Id, newnode->Name, newnode->Address) == 3) {
+            newnode->ptr = NULL;
+            if (head == NULL) {
+                head = newnode;
+                temp = newnode;
+            } else {
+                temp->ptr = newnode;
+                temp = newnode;
+            }
+        } else {
+            free(newnode->Name);
+            free(newnode->Address);
+            free(newnode);
+            break;
+        }
+    }
+    fclose(file);
+    printf("List loaded from %s.\n", filename);
+    return head;
+}
 
 void swapStudentsByName(struct student* head, char* name1, char* name2)
 {
@@ -56,13 +133,18 @@ void swapStudentsByName(struct student* head, char* name1, char* name2)
 }
 void sortStudentsByName(struct student* head)
 {
-    if (head == NULL) return;
+    if (head == NULL)
+    {
+        return;
+    }
     struct student* i = head;
-    while (i->ptr != NULL) {
+    while (i->ptr != NULL)
+    {
         struct student* j = i->ptr;
-        while (j != NULL) {
-            if (strcmp(i->Name, j->Name) > 0) {
-
+        while (j != NULL)
+        {
+            if (strcmp(i->Name, j->Name) > 0)
+            {
                 char* tempName = i->Name;
                 char* tempAddress = i->Address;
                 int tempId = i->Id;
@@ -81,14 +163,18 @@ void sortStudentsByName(struct student* head)
     }
     printf("Students sorted by name.\n");
 }
-void sortStudentsById(struct student* head) {
-    if (head == NULL) return;
+void sortStudentsById(struct student* head)
+{
+    if (head == NULL)
+        return;
     struct student* i = head;
-    while (i->ptr != NULL) {
+    while (i->ptr != NULL)
+    {
         struct student* j = i->ptr;
-        while (j != NULL) {
-            if (i->Id > j->Id) {
-
+        while (j != NULL)
+        {
+            if (i->Id > j->Id)
+            {
                 char* tempName = i->Name;
                 char* tempAddress = i->Address;
                 int tempId = i->Id;
@@ -112,11 +198,12 @@ void sortStudentsById(struct student* head) {
 int main()
 {
     int choice, count = 1,pos,pos1;
-    struct student *head, *newnode, *temp, *temp1,*temp2;
+    struct student *head, *newnode, *temp, *temp1,*temp2,*temp3;
+    char filename[] = "students.txt";
     head = NULL;
     while (1)
     {
-        printf("Enter 1 to Add Student\n2 to Swap Students by Name\n3 to Display\n4 toInsert student\n5 to delete student\n6 to Sort by Naame\n7 to Sort by ID\n8 to exit\n");
+        printf("Enter 1 to Add Student\n2 to Swap Students by Name\n3 to Display\n4 toInsert student\n5 to delete student\n6 to Sort by Naame\n7 to Sort by ID\n8 to save to file(list - file)\n9 to Display file data\n10 to Sync(file - list)");
         scanf("%d", &choice);
         switch (choice)
         {
@@ -157,7 +244,6 @@ int main()
             break;
         }
         case 3:
-        {
             printf("Student Details:\npos\tId\tName\t\tAddress\n");
             temp1 = head;
             if(head == 0)
@@ -167,14 +253,12 @@ int main()
             int k = 1;
             while (temp1 != NULL)
             {
-                printf("%d\t%d\t%s\t\t%s\n",k++, temp1->Id, temp1->Name, temp1->Address);
+                printf("%d\t%d\t%s\t\t%s\n", k++, temp1->Id, temp1->Name, temp1->Address);
                 temp1 = temp1->ptr;
             }
             break;
-        }
 
         case 4:
-        {
             printf("Enter position after which you want to insert\n");
             scanf("%d",&pos);
             if(pos > count)
@@ -202,13 +286,10 @@ int main()
                 newnode->ptr = temp2->ptr;
                 temp2->ptr = newnode;
 
-
-            break;
             }
+            break;
 
-        case 5:
-        {
-            printf("Enter Position of student to delete\n");
+        case 5:printf("Enter Position of student to delete\n");
             scanf("%d",&pos1);
             struct student *temp3,*nextnode;
             temp3 = head;
@@ -222,42 +303,42 @@ int main()
             nextnode = temp3->ptr;
             temp3->ptr = nextnode->ptr;
             free(nextnode);
-
             break;
-        }
 
         case 6:
-        {
             sortStudentsByName(head);
-
             break;
-        }
 
         case 7:
-        {
             sortStudentsById(head);
-
             break;
-        }
 
         case 8:
-        {
-            exit(0);
-
+            saveToFile(head, filename);
             break;
-        }
-        default:
-        {
-            printf("Invalid choice. Try again.\n");
 
+        case 9:
+            displayFileContent(filename);
+            break;
+
+        case 10:
+            temp3 = head;
+            while (temp3 != NULL) {
+                struct student* next = temp3->ptr;
+                free(temp3->Name);
+                free(temp3->Address);
+                free(temp3);
+                temp3 = next;
+            }
+            head = loadFromFile(filename);
+            break;
+
+        default:
+            printf("Invalid choice. Try again.\n");
             break;
         }
     }
-    free(newnode);
-    free(head);
 
     return 0;
-    }
-}
 }
 
